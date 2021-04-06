@@ -30,7 +30,6 @@ public class CreativeSpace extends Application {
         Scene scene = new Scene(root, screenWidth, screenHeight);
         
         
-                
         primaryStage.setTitle("Creative Space");
         primaryStage.setScene(scene);
         primaryStage.show();
