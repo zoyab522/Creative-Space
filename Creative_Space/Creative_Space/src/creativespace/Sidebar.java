@@ -101,9 +101,6 @@ public class Sidebar extends FlowPane {
     }
 
     public void processMouseClick(MouseEvent event) {
-		Canvas canvas = layers.get(layers.size() - 1);
-        gc = canvas.getGraphicsContext2D();
-        gc.setLineWidth(1);
         rectangle = new Rectangle();
         circle = new Circle();
         ellipse = new Ellipse();
@@ -118,12 +115,18 @@ public class Sidebar extends FlowPane {
             circle.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
-        } else if (EllipseButton.isSelected())
+        } else if (EllipseButton.isSelected()) {
             ellipse.setCenterX(event.getX());
             ellipse.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
-	}
+        } else if (LineButton.isSelected()) {
+            line.setStartX(event.getX());
+            line.setStartY(event.getY());
+            gc.setStroke(Stroke.getValue());
+        }
+        
+    }
 
     public void processDrawing(MouseEvent event) {
         if (RectangleButton.isSelected() && !drag) {
@@ -193,6 +196,24 @@ public class Sidebar extends FlowPane {
 
             ellipse.setRadiusX(newX);
             ellipse.setRadiusY(newY);
+		
+	    drag = false;
+        }
+	
+	    if (LineButton.isSelected() && !drag) {
+            line.setEndX(event.getX());
+            line.setEndY(event.getY());
+            
+            gc.strokeLine(line.getStartX() - 150, line.getStartY() - 150, line.getEndX(), line.getEndY());
+
+        } else {
+            double newX = event.getX();
+            double newY = event.getY();
+            
+            line.setEndX(newX);
+            line.setEndY(newY);
+            
+            drag = false;
         }
 
     }
