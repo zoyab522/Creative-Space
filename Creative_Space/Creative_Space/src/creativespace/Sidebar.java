@@ -101,6 +101,9 @@ public class Sidebar extends FlowPane {
     }
 
     public void processMouseClick(MouseEvent event) {
+		Canvas canvas = layers.get(layers.size() - 1);
+        gc = canvas.getGraphicsContext2D();
+        gc.setLineWidth(1);
         rectangle = new Rectangle();
         circle = new Circle();
         ellipse = new Ellipse();
