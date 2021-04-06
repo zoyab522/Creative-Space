@@ -1,5 +1,7 @@
 package creativespace;
 
+import java.util.ArrayList;
+
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -11,6 +13,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -40,8 +43,20 @@ public class Sidebar extends FlowPane {
     private double initialY;
     private ToggleGroup Buttons;
     private boolean move = false, drag = false;
+	private ArrayList<Canvas> layers;
+	private Button addLayer;
+	private Button removeLayer;
+    private VBox Tools;
+    private HBox tools1;
+	private StackPane stackpane;
 
     public Sidebar() {
+		layers = new ArrayList<>();
+
+		addLayer = new Button("Add a New Layer");
+			addLayer.setOnAction(this::addNewLayer);
+		removeLayer = new Button("Remove a Layer");
+			removeLayer.setOnAction(this::removeTopLayer);
 
         RectangleButton = new ToggleButton("Rectangle");
         CircleButton = new ToggleButton("Circle");
@@ -65,10 +80,11 @@ public class Sidebar extends FlowPane {
         Label ShapeLabel = new Label("Shapes");
         Label FillColor = new Label("Fill Color");
 
-        VBox Tools = new VBox();
-        HBox tools1 = new HBox();
+        Tools = new VBox();
+        tools1 = new HBox();
+		stackpane = new StackPane();
         Tools.getChildren().addAll(ShapeLabel, RectangleButton, CircleButton, EllipseButton, LineButton,
-                StrokeColor, Stroke, FillColor, Fill);
+                StrokeColor, Stroke, FillColor, Fill, new Label("\n"), addLayer, removeLayer);
         Tools.setPadding(new Insets(5));
         Tools.setStyle("-fx-background-color: #999");
         Tools.setPrefWidth(150);
@@ -76,16 +92,18 @@ public class Sidebar extends FlowPane {
         setOnMousePressed(this::processMouseClick);
         setOnMouseReleased(this::processDrawing);
 
-        Canvas canvas = new Canvas(1290, 900);
-        tools1.getChildren().addAll(Tools, canvas);
+		layers.add(new Canvas(1290, 900));
+		stackpane.getChildren().add(layers.get(0));
+        tools1.getChildren().addAll(Tools, stackpane);
         //tools1.getChildren().add(Tools);
-        gc = canvas.getGraphicsContext2D();
-        gc.setLineWidth(1);
 
         getChildren().add(tools1);
     }
 
     public void processMouseClick(MouseEvent event) {
+		Canvas canvas = layers.get(layers.size() - 1);
+        gc = canvas.getGraphicsContext2D();
+        gc.setLineWidth(1);
         rectangle = new Rectangle();
         circle = new Circle();
         ellipse = new Ellipse();
@@ -105,9 +123,7 @@ public class Sidebar extends FlowPane {
             ellipse.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
-
-        
-}
+	}
 
     public void processDrawing(MouseEvent event) {
         if (RectangleButton.isSelected() && !drag) {
@@ -180,4 +196,18 @@ public class Sidebar extends FlowPane {
         }
 
     }
+
+	public void addNewLayer(ActionEvent event) {
+		layers.add(new Canvas(1290, 900));
+		Canvas topLayer = layers.get(layers.size() - 1);
+		stackpane.getChildren().add(topLayer);
+	}
+
+	public void removeTopLayer(ActionEvent event) {
+		if (layers.size() > 1) {
+			Canvas topLayer = layers.get(layers.size() - 1);
+			stackpane.getChildren().remove(topLayer);
+			layers.remove(layers.size() - 1);
+		}
+	}
 }
