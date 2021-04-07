@@ -1,6 +1,7 @@
 package creativespace;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -21,6 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
+import javafx.scene.shape.Shape;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
@@ -44,6 +46,10 @@ public class Sidebar extends FlowPane {
     private ToggleGroup Buttons;
     private boolean move = false, drag = false;
 	private ArrayList<Canvas> layers;
+	private Button undoButton;
+	private Button redoButton;
+	private Stack<Shape> undoHistory;
+	private Stack<Shape> redoHistory;
 	private Button addLayer;
 	private Button removeLayer;
     private VBox Tools;
@@ -51,6 +57,14 @@ public class Sidebar extends FlowPane {
 	private StackPane stackpane;
 
     public Sidebar() {
+
+		undoHistory = new Stack<>();
+		redoHistory = new Stack<>();
+		undoButton = new Button("Undo Last Action");
+			undoButton.setOnAction(this::processUndo);
+		redoButton = new Button("Redo Last Action");
+			redoButton.setOnAction(this::processRedo);
+
 		layers = new ArrayList<>();
 
 		addLayer = new Button("Add a New Layer");
@@ -84,7 +98,7 @@ public class Sidebar extends FlowPane {
         tools1 = new HBox();
 		stackpane = new StackPane();
         Tools.getChildren().addAll(ShapeLabel, RectangleButton, CircleButton, EllipseButton, LineButton,
-                StrokeColor, Stroke, FillColor, Fill, new Label("\n"), addLayer, removeLayer);
+                StrokeColor, Stroke, FillColor, Fill, new Label("\n"), undoButton, redoButton, new Label("\n"), addLayer, removeLayer);
         Tools.setPadding(new Insets(5));
         Tools.setStyle("-fx-background-color: #999");
         Tools.setPrefWidth(150);
@@ -113,20 +127,24 @@ public class Sidebar extends FlowPane {
             rectangle.setY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
+			undoHistory.push(rectangle);
         } else if (CircleButton.isSelected()) {
             circle.setCenterX(event.getX());
             circle.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
+			undoHistory.push(circle);
         } else if (EllipseButton.isSelected()) {
             ellipse.setCenterX(event.getX());
             ellipse.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
+			undoHistory.push(rectangle);
         } else if (LineButton.isSelected()) {
             line.setStartX(event.getX());
             line.setStartY(event.getY());
             gc.setStroke(Stroke.getValue());
+			undoHistory.push(rectangle);
         }
         
     }
@@ -219,6 +237,7 @@ public class Sidebar extends FlowPane {
             drag = false;
         }
 
+
     }
 
 	public void addNewLayer(ActionEvent event) {
@@ -233,5 +252,27 @@ public class Sidebar extends FlowPane {
 			stackpane.getChildren().remove(topLayer);
 			layers.remove(layers.size() - 1);
 		}
+	}
+
+	public void processUndo(ActionEvent event) {
+		if (!undoHistory.empty()) {
+			Shape ourShape = undoHistory.pop();
+			if (ourShape.getClass() == Rectangle.class) {
+				Rectangle ourRectangle = (Rectangle) ourShape;
+				double x = ourRectangle.getX();
+				double y = ourRectangle.getY();
+				double width = ourRectangle.getWidth();
+				double height = ourRectangle.getHeight();
+            	gc.clearRect(x, y, width, height);
+				System.out.println("undo");
+			}
+			Canvas topLayer = layers.get(layers.size() - 1);
+        	gc = topLayer.getGraphicsContext2D();
+        	gc.setLineWidth(1);
+			redoHistory.push(ourShape);
+		}
+	}
+	public void processRedo(ActionEvent event) {
+		gc.restore();
 	}
 }
