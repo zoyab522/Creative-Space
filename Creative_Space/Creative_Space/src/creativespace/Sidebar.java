@@ -204,7 +204,7 @@ public class Sidebar extends FlowPane {
             line.setEndX(event.getX());
             line.setEndY(event.getY());
             
-            gc.strokeLine(line.getStartX() - 150, line.getStartY() - 150, line.getEndX(), line.getEndY());
+            gc.strokeLine(line.getStartX() - 150, line.getStartY(), line.getEndX() - 150, line.getEndY());
 
         } else {
             double newX = event.getX();
