@@ -45,26 +45,18 @@ public class Sidebar extends FlowPane {
     private double initialY;
     private ToggleGroup Buttons;
     private boolean move = false, drag = false;
-	private ArrayList<Canvas> layers;
+	private ArrayList<Stack<Canvas>> layers;
 	private Button undoButton;
-	private Button redoButton;
-	private Stack<Shape> undoHistory;
-	private Stack<Shape> redoHistory;
-	private Button addLayer;
 	private Button removeLayer;
+	private Button addLayer;
     private VBox Tools;
     private HBox tools1;
 	private StackPane stackpane;
 
     public Sidebar() {
 
-		undoHistory = new Stack<>();
-		redoHistory = new Stack<>();
 		undoButton = new Button("Undo Last Action");
 			undoButton.setOnAction(this::processUndo);
-		redoButton = new Button("Redo Last Action");
-			redoButton.setOnAction(this::processRedo);
-
 		layers = new ArrayList<>();
 
 		addLayer = new Button("Add a New Layer");
@@ -98,7 +90,7 @@ public class Sidebar extends FlowPane {
         tools1 = new HBox();
 		stackpane = new StackPane();
         Tools.getChildren().addAll(ShapeLabel, RectangleButton, CircleButton, EllipseButton, LineButton,
-                StrokeColor, Stroke, FillColor, Fill, new Label("\n"), undoButton, redoButton, new Label("\n"), addLayer, removeLayer);
+                StrokeColor, Stroke, FillColor, Fill, new Label("\n"), undoButton, new Label("\n"), addLayer, removeLayer);
         Tools.setPadding(new Insets(5));
         Tools.setStyle("-fx-background-color: #999");
         Tools.setPrefWidth(150);
@@ -106,8 +98,17 @@ public class Sidebar extends FlowPane {
         setOnMousePressed(this::processMouseClick);
         setOnMouseReleased(this::processDrawing);
 
-		layers.add(new Canvas(1290, 900));
-		stackpane.getChildren().add(layers.get(0));
+		layers.add(new Stack<Canvas>());
+		layers.get(0).push(new Canvas(1200, 900));
+		Stack<Canvas> topLayer = layers.get(layers.size() - 1);
+		
+		Canvas topCanvas = topLayer.peek();
+        gc = topCanvas.getGraphicsContext2D();
+        gc.setLineWidth(1);
+		gc.setFill(Color.WHITE);
+		gc.fillRect(0,0, 1290, 900);
+
+		stackpane.getChildren().add(layers.get(0).peek());
         tools1.getChildren().addAll(Tools, stackpane);
         //tools1.getChildren().add(Tools);
 
@@ -115,8 +116,11 @@ public class Sidebar extends FlowPane {
     }
 
     public void processMouseClick(MouseEvent event) {
-		Canvas canvas = layers.get(layers.size() - 1);
-        gc = canvas.getGraphicsContext2D();
+		int layerListSize = layers.size() - 1;
+		layers.get(layerListSize).push(new Canvas(1200, 900));
+		stackpane.getChildren().add(layers.get(layerListSize).peek());
+		Canvas topCanvas = layers.get(layerListSize).peek();
+        gc = topCanvas.getGraphicsContext2D();
         gc.setLineWidth(1);
         rectangle = new Rectangle();
         circle = new Circle();
@@ -127,24 +131,20 @@ public class Sidebar extends FlowPane {
             rectangle.setY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
-			undoHistory.push(rectangle);
         } else if (CircleButton.isSelected()) {
             circle.setCenterX(event.getX());
             circle.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
-			undoHistory.push(circle);
         } else if (EllipseButton.isSelected()) {
             ellipse.setCenterX(event.getX());
             ellipse.setCenterY(event.getY());
             gc.setStroke(Stroke.getValue());
             gc.setFill(Fill.getValue());
-			undoHistory.push(rectangle);
         } else if (LineButton.isSelected()) {
             line.setStartX(event.getX());
             line.setStartY(event.getY());
             gc.setStroke(Stroke.getValue());
-			undoHistory.push(rectangle);
         }
         
     }
@@ -241,38 +241,26 @@ public class Sidebar extends FlowPane {
     }
 
 	public void addNewLayer(ActionEvent event) {
-		layers.add(new Canvas(1290, 900));
-		Canvas topLayer = layers.get(layers.size() - 1);
-		stackpane.getChildren().add(topLayer);
+		layers.add(new Stack<Canvas>());
+		Canvas topCanvas = new Canvas(1200, 900);
+		layers.get(layers.size() - 1).push(topCanvas);
+		stackpane.getChildren().add(topCanvas);
 	}
 
 	public void removeTopLayer(ActionEvent event) {
 		if (layers.size() > 1) {
-			Canvas topLayer = layers.get(layers.size() - 1);
-			stackpane.getChildren().remove(topLayer);
+			Stack<Canvas> topLayer = layers.get(layers.size() - 1);
+			while (!topLayer.empty()) {
+				stackpane.getChildren().remove(topLayer.pop());
+			}
 			layers.remove(layers.size() - 1);
 		}
 	}
 
 	public void processUndo(ActionEvent event) {
-		if (!undoHistory.empty()) {
-			Shape ourShape = undoHistory.pop();
-			if (ourShape.getClass() == Rectangle.class) {
-				Rectangle ourRectangle = (Rectangle) ourShape;
-				double x = ourRectangle.getX();
-				double y = ourRectangle.getY();
-				double width = ourRectangle.getWidth();
-				double height = ourRectangle.getHeight();
-            	gc.clearRect(x, y, width, height);
-				System.out.println("undo");
-			}
-			Canvas topLayer = layers.get(layers.size() - 1);
-        	gc = topLayer.getGraphicsContext2D();
-        	gc.setLineWidth(1);
-			redoHistory.push(ourShape);
+		Stack<Canvas> topLayer = layers.get(layers.size() - 1);
+		if (!topLayer.empty()) {
+			stackpane.getChildren().remove(topLayer.pop());
 		}
-	}
-	public void processRedo(ActionEvent event) {
-		gc.restore();
 	}
 }
