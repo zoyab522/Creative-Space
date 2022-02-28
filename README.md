@@ -14,6 +14,6 @@ Since we decided to work as a group, we had to find a way to share our code, eve
 In our first iteration of the project, we used the Pane class and absolute coordinates to put shapes where we wanted them. However, this was design had a lot more moving parts, and it looked a lot worse than the current design, with Canvas.
 In our current version, we used the Canvas class and the Graphics Context to add shapes to the screen. This made the application a lot more aestheically pleasing, but it was also a bit harder to manipulate, in terms of implementing layers and the undo functionality.
 
-## Logic Flow
-In this iteration, we have
+## Current
+This project was completed in Spring 2021 (by 2 junior highschoolers XD), currently updating and fixing bugs lol see u back here later :) 
 
